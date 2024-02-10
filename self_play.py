@@ -16,7 +16,7 @@ class SelfPlay:
 
     def __init__(self, initial_checkpoint, Game, config, seed):
         self.config = config
-        self.game = Game(seed)
+        self.game = Game()
 
         # Fix random generator seed
         numpy.random.seed(seed)
@@ -25,7 +25,10 @@ class SelfPlay:
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
         self.model.set_weights(initial_checkpoint["weights"])
-        self.model.to(torch.device("cuda" if self.config.selfplay_on_gpu else "cpu"))
+        self.model.to(
+            torch.device(
+                "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
+        )
         self.model.eval()
 
     def continuous_self_play(self, shared_storage, replay_buffer, test_mode=False):

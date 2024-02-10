@@ -25,13 +25,19 @@ class Trainer:
         # Initialize the network
         self.model = models.MuZeroNetwork(self.config)
         self.model.set_weights(copy.deepcopy(initial_checkpoint["weights"]))
-        self.model.to(torch.device("cuda" if self.config.train_on_gpu else "cpu"))
+        self.model.to(
+            torch.device(
+                "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
+        )
         self.model.train()
 
         self.training_step = initial_checkpoint["training_step"]
 
         if "cuda" not in str(next(self.model.parameters()).device):
-            print("You are not training on GPU.\n")
+            if torch.backends.mps.is_available():
+                print("You are training on MPS.\n")
+            else:
+                print("You are not training on GPU.\n")
 
         # Initialize the optimizer
         if self.config.optimizer == "SGD":
